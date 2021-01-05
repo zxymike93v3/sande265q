@@ -1,0 +1,66 @@
+const pool = require("../../database/database")
+
+module.exports = {
+    getSales: (req, res) => {
+        let { start_date, end_date } = req.query;
+        pool.query(
+            `SELECT * FROM products WHERE (sold_date BETWEEN ? AND ?)`,
+            [start_date, end_date],
+            (err, result) => {
+                if (err) res.status(400).json({
+                    message: 'Something Went Wrong'
+                })
+                else {
+                    if (result[0]) {
+                        res.status(200).json({
+                            message: `Successfully Retrived Sales Report from ${start_date} to ${end_date}`,
+                            data: result
+                        })
+                    } else {
+                        res.status(204).json({})
+                    }
+                }
+            }
+        )
+    },
+    getDailySales: (req, res) => {
+        let yourDate = new Date()
+        const offset = yourDate.getTimezoneOffset()
+        localDate = new Date(yourDate.getTime() - (offset * 60 * 1000))
+        let date = req.query.date ? req.query.date : localDate.toISOString().split('T')[0]
+        var dt = new Date(date).toISOString().slice(0, 19).replace("T", " ");
+        pool.query(
+            'SELECT * FROM products WHERE sold_date=? ',
+            [dt],
+            (err, result) => {
+                if (err) res.status(400).json({ err })
+                else if (result) {
+                    let total = 0;
+                    let qty = 0;
+                    if (result && result.length > 0) {
+                        for (var i = 0; i < result.length; i++) {
+                            if (result[i] && result[i].sale_price !== null)
+                                total += result[i].sale_price
+                        }
+                    }
+                    qty += result && result.length
+
+                    if (qty >= 1) {
+                        res.status(200).json({
+                            message: "Successfully Retrived List of Sold items",
+                            data: result,
+                            total_amount: total,
+                            total_qty: qty,
+                            date: dt,
+                        })
+                    } else {
+                        res.status(400).json({
+                            message: 'No Sold Items on Given Date',
+                            date: dt
+                        })
+                    }
+                }
+            }
+        )
+    }
+}
