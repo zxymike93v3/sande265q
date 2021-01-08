@@ -3,8 +3,8 @@ const pool = require("../../database/database")
 module.exports = {
     create: (data, callback) => {
         pool.query(
-            `INSERT into products(product_name, category, type,slug, color, price, actual_price, sale_price, is_sold, purchased_date, sold_date, status, image, qty, last_sale_price)
-                value(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+            `INSERT into products(product_name, category, type,slug, color, price, actual_price, sale_price, is_sold, purchased_date, sold_date, status, image, qty)
+                value(?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
             [
                 data.product_name,
                 JSON.stringify(data.category),
@@ -20,7 +20,6 @@ module.exports = {
                 parseInt(data.status) === 1 || data.status === true ? 1 : 0,
                 data.image,
                 data.qty,
-                data.last_sale_price
             ], (error, result) => {
                 if (error) return callback(error)
                 return (callback(null, result))
@@ -66,7 +65,7 @@ module.exports = {
             // status = parseInt(data.status) === 1 || pareseBool(data.status) === true ? 1 : 0
         }
         pool.query(
-            `UPDATE products SET product_name=?, category=?, type=?,slug=?, color=?, price=?, actual_price=?, sale_price=?, is_sold=?, purchased_date=?, sold_date=?, status=?, qty=?, last_sale_price=?,image=?, updated_at=? WHERE id = ?`,
+            `UPDATE products SET product_name=?, category=?, type=?,slug=?, color=?, price=?, actual_price=?, sale_price=?, is_sold=?, purchased_date=?, sold_date=?, status=?, qty=?,image=?, updated_at=? WHERE id = ?`,
             [
                 data.product_name,
                 JSON.stringify(data.category),
@@ -81,7 +80,6 @@ module.exports = {
                 data.sold_date,
                 status,
                 data.qty,
-                data.last_sale_price,
                 data.image,
                 updated_at,
                 id,

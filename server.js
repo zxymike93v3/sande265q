@@ -2,8 +2,8 @@ const express = require('express');
 require('dotenv').config();
 const app = express();
 const bodyParser = require('body-parser');
-const { authRoutes, customerRoute, userRoutes, productRoute, vendorRoute, salesRoute, categoryRoute } = require('./api');
-const imageRoute = require('./api/imageUpload')
+const { authRoutes, customerRoute, userRoutes, productRoute, vendorRoute, salesRoute, categoryRoute } = require('./src/api');
+const imageRoute = require('./src/api/imageUpload')
 const cors = require('cors')
 
 //Environment variable

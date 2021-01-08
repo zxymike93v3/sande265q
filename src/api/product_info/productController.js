@@ -29,14 +29,13 @@ module.exports = {
                 color: ['required'],
                 price: ['required', 'numeric'],
                 actual_price: ['required'],
-                category: ['required'],
-                type: ['required'],
                 qty: ['required']
             };
             if (body._method) {
                 let id = req.body.id
                 if (req.file) {
                     let path = req.file && req.file.path && req.file.path.split('\\')[1];
+                    console.log("req, file", req.file);
                     body['image'] = `http://${process.env.BASE_URL}/uploads/${path}`
                 }
                 let errors = {};
