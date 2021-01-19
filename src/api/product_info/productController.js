@@ -79,7 +79,7 @@ module.exports = {
                 if (req.file) {
                     // let path = req.file && req.file.path && req.file.path.split('uploads')[1];
                     console.log("req, file", req.file?.path?.split('uploads')[1]);
-                    body['image'] = `http://${process.env.BASE_URL}/uploads/${req.file?.path}`
+                    body['image'] = `http://${process.env.BASE_URL}/uploads/${req.file}`
                 }
                 let errors = {};
                 const validation = localValidation(body, validationRule, errors, false)
