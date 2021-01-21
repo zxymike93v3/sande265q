@@ -17,7 +17,7 @@ const upload = multer({
     limits: {
         fileSize: 1024 * 512
     }
-}).single('image')
+}).single('product_image')
 
 module.exports = {
     createEditProduct: (req, res) => {
@@ -79,7 +79,7 @@ module.exports = {
                 if (req.file) {
                     // let path = req.file && req.file.path && req.file.path.split('uploads')[1];
                     console.log("req, file", req.file?.path?.split('uploads')[1]);
-                    body['image'] = `http://${process.env.BASE_URL}/uploads/${req.file}`
+                    body['image'] = `http://${process.env.BASE_URL}/uploads/tested`
                 }
                 let errors = {};
                 const validation = localValidation(body, validationRule, errors, false)
