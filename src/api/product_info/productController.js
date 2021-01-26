@@ -17,7 +17,7 @@ const upload = multer({
     limits: {
         fileSize: 1024 * 512
     }
-}).single('product_image')
+}).single('image')
 
 module.exports = {
     createEditProduct: (req, res) => {
