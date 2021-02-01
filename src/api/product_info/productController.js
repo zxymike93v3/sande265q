@@ -34,7 +34,7 @@ module.exports = {
             if (body._method) {
                 let id = req.body.id
                 if (req.file) {
-                    let path = req.file && req.file.path && req.file.path.split('\\')[1];
+                    let path = req.file && req.file.path && req.file.path.split('uploads')[1];
                     body['image'] = `http://${process.env.BASE_URL}/uploads/${path}`
                 }
                 let errors = {};
@@ -78,7 +78,6 @@ module.exports = {
             } else {
                 if (req.file) {
                     let path = req.file && req.file.path && req.file.path.split('uploads')[1];
-                    console.log("req, file", req.file);
                     body['image'] = `http://${process.env.BASE_URL}/uploads/${path}`
                 }
                 let errors = {};
