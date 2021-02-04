@@ -49,6 +49,17 @@ module.exports = {
             })
         })
     },
+    getLoggedUser: (req, res) => {
+        let token = req.headers.authorization || req.headers.auth
+        token = token && token.split(" ")[1]
+        const decoded = jwt(token)
+        getUserById(decoded.sub, (err, result) => {
+            if (err) res.status(204)
+            if (result) res.status(200).json({
+                logged: result[0],
+            })
+        })
+    },
     getUsers: (req, res) => {
         let token = req.headers.authorization || req.headers.auth
         token = token && token.split(" ")[1]
@@ -94,8 +105,6 @@ module.exports = {
     updateUser: (req, res) => {
         const id = req.params.id;
         const body = req.body;
-        const salt = genSaltSync(10);
-        body.password = hashSync(body.password, salt)
         updateUser(id, body, (err, result) => {
             if (err) return res.status(400).json({
                 message: `${err.sqlMessage ? err.sqlMessage : 'Something Went Wrong'}`,

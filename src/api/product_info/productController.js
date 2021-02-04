@@ -122,13 +122,12 @@ module.exports = {
     },
     getProducts: (req, res) => {
         getProducts((err, result) => {
-            let { sort_by, sort_field } = req.query;
-            const { pages, limits, start, to, filterData, total, last_page, q } = paginate(result, req)
+            const { pages, limits, start, to, filterData, total, last_page, q, filter } = paginate(result, req)
             if (err) return res.status(400).json({
                 message: `${err.sqlMessage ? err.sqlMessage : 'Something Went Wrong'}`
             })
-            if (q) {
-                searchProduct(q, (error, results) => {
+            if (q || filter) {
+                searchProduct(q ? q : filter, (error, results) => {
                     const { pages, limits, start, filterData, to, total, last_page } = paginate(results, req)
                     if (error) console.log("error", error);
                     else {

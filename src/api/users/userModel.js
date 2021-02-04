@@ -46,17 +46,29 @@ module.exports = {
         const updated_at = new Date()
         updated_at.toLocaleDateString('fr-CA', { year: 'numeric', month: '2-digit', day: '2-digit' })
         pool.query(
-            `UPDATE user set name=?, username=?, password=?, email=?, role=?, image=?, updated_at = ?, status=?, contact=? where id = ?`,
+            `UPDATE user set name=?, username=?, email=?, role=?, image=?, updated_at = ?, status=?, contact=? where id = ?`,
             [
                 data.name,
                 data.username,
-                data.password,
                 data.email,
                 data.role,
                 data.image,
                 updated_at,
                 parseInt(data.status) === 1 || data.status == true ? 1 : 0,
                 data.contact,
+                id
+            ],
+            (error, result) => {
+                if (error) return callback(error)
+                return callback(null, result)
+            }
+        )
+    },
+    changePassword: (id, data, callback) => {
+        pool.query(
+            `UPDATE user set password=? where id = ?`,
+            [
+                data.password,
                 id
             ],
             (error, result) => {

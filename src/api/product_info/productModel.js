@@ -2,6 +2,10 @@ const pool = require("../../database/database")
 
 module.exports = {
     create: (data, callback) => {
+        const pareseBool = (string) => {
+            if (string === 'true' || string) return true
+            else return false
+        }
         pool.query(
             `INSERT into products(product_name, category, type,slug, color, price, actual_price, sale_price, is_sold, purchased_date, sold_date, status, image, qty)
                 value(?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
@@ -17,7 +21,7 @@ module.exports = {
                 data.is_sold,
                 data.purchased_date,
                 data.sold_date,
-                parseInt(data.status) === 1 || data.status === true ? 1 : 0,
+                parseInt(data.status) === 1 || pareseBool(data.status) === true ? 1 : 0,
                 data.image,
                 data.qty,
             ], (error, result) => {
@@ -101,9 +105,17 @@ module.exports = {
         )
     },
     searchProduct: (query, callback) => {
+        let search;
+        if (typeof query === 'object') {
+            Object.keys(query).map(item => {
+                search = query[item];
+            })
+        } else {
+            search = query;
+        }
         pool.query(
-            `SELECT * FROM products WHERE CONCAT(product_name, "", slug, "") LIKE (?)`,
-            [`%${query}%`],
+            `SELECT * FROM products WHERE CONCAT(product_name, slug, id) LIKE (?)`,
+            [`%${search}%`],
             (error, result) => {
                 if (error) return callback(error)
                 return callback(null, result)
