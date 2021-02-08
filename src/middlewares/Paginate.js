@@ -6,7 +6,7 @@ module.exports = {
         const start = (pages - 1) * limits + 1;
         const end = pages * limits;
         const total = data && data.length;
-        let filter = req.query?.filter;
+        let filter = req.query && req.query.filter;
 
         let filterData = data && data.slice(start - 1, end)
 
