@@ -12,7 +12,7 @@ module.exports = {
 
         const last_page = Math.ceil(total / limits)
 
-        const to = (start - 1) + filterData.length
+        const to = (start - 1) + filterData && filterData.length
 
         return { pages, limits, start, to, filterData, total, last_page, q, filter }
     }
