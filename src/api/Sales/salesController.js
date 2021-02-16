@@ -1,4 +1,5 @@
 const pool = require("../../database/database");
+const { localValidation } = require("../../helpers/ValidationHelper");
 const { paginate } = require("../../middlewares/Paginate");
 const { getProduct, updateProduct } = require("../product_info/productModel");
 const { Sales, dailySales, sell } = require("./salesModel");
@@ -92,26 +93,40 @@ module.exports = {
                         data['sale_price'] = body.sale_price
                         data['sold_product_id'] = product.id
                         data['actual_price'] = body.actual_price ? body.actual_price : product.actual_price
-                        sell(id, data, (error, response) => {
-                            if (error) res.status(400).json({ error })
-                            if (response) {
-                                product['qty'] = product.qty - body.qty
-                                if (product['qty'] === 0) {
-                                    product['status'] = 0
-                                    product['is_sold'] = 1
-                                }
-                                updateProduct(id, product, (err, callback) => {
-                                    if (err) res.status(400).json({ err, message: 'Something Went Wrong' })
-                                    if (callback) {
-                                        res.status(200).json({
-                                            message: 'Product Successfully Sold',
-                                            qty: body.qty,
-                                            product
-                                        })
+                        let validationRule = {
+                            sale_price: ['required'],
+                            qty: ['required']
+                        };
+                        let errors = {};
+                        const validation = localValidation(body, validationRule, errors, false)
+                        if (validation.localvalidationerror) {
+                            return res.status(422).json({
+                                message: { ...validation.error },
+                            })
+                        } else {
+                            sell(id, data, (error, response) => {
+                                if (error) res.status(400).json({ error })
+                                if (response) {
+                                    product['qty'] = product.qty - body.qty
+                                    product['category'] = "";
+                                    product['type'] = '';
+                                    if (product['qty'] === 0) {
+                                        product['status'] = 0
+                                        product['is_sold'] = 1
                                     }
-                                })
-                            }
-                        })
+                                    updateProduct(id, product, (err, callback) => {
+                                        if (err) res.status(400).json({ err, message: 'Something Went Wrong' })
+                                        if (callback) {
+                                            res.status(200).json({
+                                                message: 'Product Successfully Sold',
+                                                qty: body.qty,
+                                                product
+                                            })
+                                        }
+                                    })
+                                }
+                            })
+                        }
                     }
                 } else {
                     res.status(422).json({
