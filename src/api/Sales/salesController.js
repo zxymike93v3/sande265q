@@ -36,6 +36,19 @@ module.exports = {
         localDate = new Date(yourDate.getTime() - (offset * 60 * 1000))
         let date = req.query.date ? req.query.date : localDate.toISOString().split('T')[0]
         var dt = new Date(date).toISOString().slice(0, 19).replace("T", " ");
+        let prev_mth = new Date(new Date().getTime() - (30 * 24 * 60 * 60 * 1000)).toISOString().split("T")[0]
+        let today = new Date().toISOString().split("T")[0];
+        let montly_total = 0;
+        Sales({ start_date: prev_mth, end_date: today }, (err, result) => {
+            if (err) console.log("errir", err);
+            if (result && result.length > 0) {
+                for (var i = 0; i < result.length; i++) {
+                    if (result[i] && result[i].sale_price !== null) {
+                        montly_total += (parseInt(result[i].sale_price) * parseInt(result[i].qty))
+                    }
+                }
+            }
+        })
         dailySales(dt, (err, result) => {
 
             if (err) res.status(400).json({ err })
@@ -58,6 +71,7 @@ module.exports = {
                         total_amount: total,
                         total_qty: qty,
                         date: dt,
+                        montly_total: montly_total ? montly_total / 1000 : 0
                     })
                 } else {
                     res.status(400).json({
@@ -98,7 +112,7 @@ module.exports = {
                             qty: ['required']
                         };
                         let errors = {};
-                        const validation = localValidation(body, validationRule, errors, false)
+                        const validation = localValidation(data, validationRule, errors, false)
                         if (validation.localvalidationerror) {
                             return res.status(422).json({
                                 message: { ...validation.error },
