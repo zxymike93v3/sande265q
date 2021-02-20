@@ -4,6 +4,23 @@ const { paginate } = require("../../middlewares/Paginate");
 const { getProduct, updateProduct } = require("../product_info/productModel");
 const { Sales, dailySales, sell } = require("./salesModel");
 
+const nFormatter = (num, digits) => {
+    const lookup = [
+        { value: 1, symbol: "" },
+        { value: 1e3, symbol: "k" },
+        { value: 1e6, symbol: "M" },
+        { value: 1e9, symbol: "G" },
+        { value: 1e12, symbol: "T" },
+        { value: 1e15, symbol: "P" },
+        { value: 1e18, symbol: "E" }
+    ];
+    const rx = /\.0+$|(\.[0-9]*[1-9])0+$/;
+    var item = lookup.slice().reverse().find(function (item) {
+        return num >= item.value;
+    });
+    return item ? (num / item.value).toFixed(digits).replace(rx, "$1") + item.symbol : "0";
+}
+
 module.exports = {
     getSales: (req, res) => {
         let { start_date, end_date } = req.query;
@@ -38,13 +55,13 @@ module.exports = {
         var dt = new Date(date).toISOString().slice(0, 19).replace("T", " ");
         let prev_mth = new Date(new Date().getTime() - (30 * 24 * 60 * 60 * 1000)).toISOString().split("T")[0]
         let today = new Date().toISOString().split("T")[0];
-        let montly_total = 0;
+        let monthly_total = 0;
         Sales({ start_date: prev_mth, end_date: today }, (err, result) => {
             if (err) console.log("errir", err);
             if (result && result.length > 0) {
                 for (var i = 0; i < result.length; i++) {
                     if (result[i] && result[i].sale_price !== null) {
-                        montly_total += (parseInt(result[i].sale_price) * parseInt(result[i].qty))
+                        monthly_total += (parseInt(result[i].sale_price) * parseInt(result[i].qty))
                     }
                 }
             }
@@ -71,12 +88,13 @@ module.exports = {
                         total_amount: total,
                         total_qty: qty,
                         date: dt,
-                        montly_total: montly_total ? montly_total / 1000 : 0
+                        monthly_total: monthly_total ? nFormatter(monthly_total, 3) : 0
                     })
                 } else {
                     res.status(400).json({
                         message: 'No Sold Items on Given Date',
-                        date: dt
+                        date: dt,
+                        monthly_total: monthly_total ? nFormatter(monthly_total, 3) : 0,
                     })
                 }
             }
