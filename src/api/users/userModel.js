@@ -64,11 +64,11 @@ module.exports = {
             }
         )
     },
-    changePassword: (id, data, callback) => {
+    changePassword: (id, pwd, callback) => {
         pool.query(
-            `UPDATE user set password=? where id = ?`,
+            `UPDATE user SET password=? where id = ?`,
             [
-                data.password,
+                pwd,
                 id
             ],
             (error, result) => {

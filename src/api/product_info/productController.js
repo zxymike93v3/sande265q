@@ -8,7 +8,7 @@ const storage = multer.diskStorage({
         cb(null, 'uploads/.')
     },
     filename: (req, file, cb) => {
-        cb(null, new Date().getUTCSeconds() + Math.random().toFixed(5) + file.originalname)
+        cb(null, new Date().getUTCSeconds() + Math.random().toFixed(5) + file.originalname.toString().replace(/[^a-z.0-9]/gi, ''))
     }
 })
 
@@ -35,6 +35,7 @@ module.exports = {
                 let id = req.body.id
                 if (req.file) {
                     let path = req.file && req.file.path && req.file.path.split('uploads')[1];
+                    path = path.toString().replace(/[^a-z.0-9]/gi, '')
                     body['image'] = `${process.env.BASE_URL}/uploads/${path}`
                 }
                 let errors = {};
@@ -48,7 +49,7 @@ module.exports = {
                         if (error.code === 'LIMIT_FILE_SIZE') {
                             error.message = 'File Size is too large. Allowed file size is 512KB';
                         }
-                        res.status(400).json({
+                        res.status(422).json({
                             message: { image: [error.message] }
                         })
                     } else {
@@ -78,6 +79,7 @@ module.exports = {
             } else {
                 if (req.file) {
                     let path = req.file && req.file.path && req.file.path.split('uploads')[1];
+                    path = path.toString().replace(/[^a-z.0-9]/gi, '')
                     body['image'] = `${process.env.BASE_URL}/uploads/${path}`
                 }
                 let errors = {};
@@ -91,7 +93,7 @@ module.exports = {
                         if (error.code == 'LIMIT_FILE_SIZE') {
                             error.message = 'File Size is too large. Allowed file size is 512KB';
                         }
-                        res.status(400).json({
+                        res.status(422).json({
                             message: { image: [error.message] }
                         })
                     } else {

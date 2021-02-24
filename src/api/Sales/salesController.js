@@ -1,7 +1,10 @@
+const { validationResult } = require("express-validator");
+const isEmpty = require("is-empty");
+const Joi = require("joi");
 const pool = require("../../database/database");
 const { localValidation } = require("../../helpers/ValidationHelper");
 const { paginate } = require("../../middlewares/Paginate");
-const { getProduct, updateProduct } = require("../product_info/productModel");
+const { getProduct, updateProduct, reduce } = require("../product_info/productModel");
 const { Sales, dailySales, sell } = require("./salesModel");
 
 const nFormatter = (num, digits) => {
@@ -72,11 +75,13 @@ module.exports = {
             else if (result) {
                 let total = 0;
                 let qty = 0;
+                let profit = 0;
                 if (result && result.length > 0) {
                     for (var i = 0; i < result.length; i++) {
                         if (result[i] && result[i].sale_price !== null) {
-                            total += (result[i].sale_price * result[i].qty)
-                            qty += result[i].qty
+                            total += (result[i].sale_price * result[i].qty);
+                            qty += result[i].qty;
+                            profit += result[i].sale_price * 0.35
                         }
                     }
                 }
@@ -88,6 +93,7 @@ module.exports = {
                         total_amount: total,
                         total_qty: qty,
                         date: dt,
+                        profit,
                         monthly_total: monthly_total ? nFormatter(monthly_total, 3) : 0
                     })
                 } else {
@@ -167,5 +173,95 @@ module.exports = {
                 }
             }
         })
+    },
+    sellMultipleItems: async (req, res) => {
+        let body = req.body
+        let validationRule = {
+            products: ['required', 'array'],
+        };
+        let errors = {};
+        let total_sold_qty = 0;
+        const validation = localValidation(body, validationRule, errors, false)
+        if (validation.localvalidationerror) {
+            return res.status(422).json({
+                message: { ...validation.error },
+            })
+        } else {
+            let { products, sold_date } = body;
+            let error = validationResult(req);
+            if (!error.isEmpty()) {
+                return res.status(422).json(
+                    error.array().map(i => {
+                        return {
+                            [i.param]: [i.msg]
+                        }
+                    })
+                );
+            }
+            else {
+                var fails = []
+                new Promise((resolve, reject) => {
+                    products.forEach((item, i) => {
+                        getProduct(item.id, (err, result) => {
+                            if (err) reject({ code: 500, message: err })
+                            else if (result) {
+                                let product = result[0]
+                                if (!product) {
+                                    fails.push({ ['products.' + i + '.id']: ['No Product Found with the given ID'] })
+                                    if (i === products.length - 1) reject(fails)
+                                } else if (product && product.qty >= 1) {
+                                    if (product.qty < item.qty) {
+                                        fails.push({ ['products.' + i + '.qty']: ["Not Enough Quantity, remaining qty = " + product.qty] })
+                                        if (i === products.length - 1) reject(fails)
+                                    } else {
+                                        let data = {};
+                                        data['qty'] = item.qty
+                                        data['sold_date'] = item.sold_date ? new Date(item.sold_date) : sold_date ? new Date(sold_date) : new Date().toISOString().split("T")[0]
+                                        data['product_name'] = product.product_name
+                                        data['sale_price'] = item.sale_price
+                                        data['sold_product_id'] = product.id
+                                        data['actual_price'] = item.actual_price ? item.actual_price : product.actual_price
+                                        sell(item.id, data, (error, response) => {
+                                            if (error) console.log("errr", error);
+                                            if (response) {
+                                                total_sold_qty += item.qty
+                                                if (product.id === result[0].id) {
+                                                    product.qty - item.qty
+                                                }
+                                                product['qty'] = product.qty - item.qty
+                                                product['category'] = "";
+                                                product['type'] = '';
+                                                if (product['qty'] === 0) {
+                                                    product['status'] = 0
+                                                    product['is_sold'] = 1
+                                                }
+                                                reduce(item.id, item.qty, (err, cb) => {
+                                                    if (err) console.log(err);
+                                                })
+                                                if (i === products.length - 1) {
+                                                    resolve({ message: "All Products Sold Successfully" })
+                                                }
+                                            }
+                                        })
+                                    }
+                                } else {
+                                    fails.push({ ['products.' + i + '.qty']: ['No Product Quantity Left to Sell.'] })
+                                    if (i === products.length - 1) reject(fails)
+                                }
+                            }
+                        })
+                    })
+                }).then(
+                    response => {
+                        res.status(200).json(response)
+                    },
+                    err => {
+                        res.status(422).json({
+                            message: err
+                        })
+                    }
+                )
+            }
+        }
     }
 }

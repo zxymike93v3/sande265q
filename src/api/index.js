@@ -5,6 +5,7 @@ const customerRoute = require('./customers/customerRoute')
 const vendorRoute = require('./vendors/vendorRoute')
 const salesRoute = require('./Sales/salesRoute')
 const categoryRoute = require('./category/categoryRoute')
+const debtorsRoute = require('./debtors/debtorsRoute');
 
 module.exports = {
     userRoutes,
@@ -13,5 +14,6 @@ module.exports = {
     customerRoute,
     vendorRoute,
     salesRoute,
-    categoryRoute
+    categoryRoute,
+    debtorsRoute
 }

@@ -2,7 +2,7 @@ const express = require('express');
 require('dotenv').config();
 const app = express();
 const bodyParser = require('body-parser');
-const { authRoutes, customerRoute, userRoutes, productRoute, vendorRoute, salesRoute, categoryRoute } = require('./src/api');
+const { authRoutes, customerRoute, userRoutes, productRoute, vendorRoute, salesRoute, categoryRoute, debtorsRoute } = require('./src/api');
 const imageRoute = require('./src/api/imageUpload')
 const cors = require('cors')
 
@@ -32,7 +32,8 @@ app.use('/api',
     vendorRoute /* Vendors Route */,
     salesRoute /* Daily Sales Routes */,
     imageRoute /* testing */,
-    categoryRoute /* Category Routes */
+    categoryRoute /* Category Routes */,
+    debtorsRoute, /* Debtors Route */
 )
 
 app.use('/uploads', express.static('uploads'))

@@ -1,11 +1,12 @@
 const pool = require("../../database/database")
 
+const pareseBool = (string) => {
+    if (string === 'true' || string) return true
+    else return false
+}
+
 module.exports = {
     create: (data, callback) => {
-        const pareseBool = (string) => {
-            if (string === 'true' || string) return true
-            else return false
-        }
         pool.query(
             `INSERT into products(product_name, category, type,slug, color, price, actual_price, sale_price, is_sold, purchased_date, sold_date, status, image, qty)
                 value(?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
@@ -52,10 +53,6 @@ module.exports = {
         )
     },
     updateProduct: (id, data, callback) => {
-        const pareseBool = (string) => {
-            if (string === 'true' || string) return true
-            else return false
-        }
         const updated_at = new Date()
         updated_at.toLocaleDateString('fr-CA', { year: 'numeric', month: '2-digit', day: '2-digit' })
         let is_sold = data.is_sold ? data.is_sold : 0;
@@ -98,6 +95,16 @@ module.exports = {
         pool.query(
             `DELETE FROM products WHERE id = ?`,
             [id],
+            (error, result) => {
+                if (error) return callback(error)
+                return callback(null, result)
+            }
+        )
+    },
+    reduce: (id, qty, callback) => {
+        pool.query(
+            `UPDATE products SET qty=qty-? WHERE id = ?`,
+            [qty, id],
             (error, result) => {
                 if (error) return callback(error)
                 return callback(null, result)

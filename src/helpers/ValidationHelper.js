@@ -112,6 +112,9 @@ module.exports = {
                         default:
                     }
                 }
+                case "*": {
+
+                }
                     break
                 default:
                     return null
