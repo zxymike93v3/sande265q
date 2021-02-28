@@ -69,8 +69,7 @@ module.exports = {
                 }
             }
         })
-        dailySales(dt, (err, result) => {
-
+        dailySales(dt.length > 10 ? dt.split(" ")[0] : dt, (err, result) => {
             if (err) res.status(400).json({ err })
             else if (result) {
                 let total = 0;
@@ -100,6 +99,7 @@ module.exports = {
                     res.status(400).json({
                         message: 'No Sold Items on Given Date',
                         date: dt,
+                        result,
                         monthly_total: monthly_total ? nFormatter(monthly_total, 3) : 0,
                     })
                 }
@@ -180,7 +180,6 @@ module.exports = {
             products: ['required', 'array'],
         };
         let errors = {};
-        let total_sold_qty = 0;
         const validation = localValidation(body, validationRule, errors, false)
         if (validation.localvalidationerror) {
             return res.status(422).json({
@@ -200,6 +199,7 @@ module.exports = {
             }
             else {
                 var fails = []
+                var total_sold_qty = 0;
                 new Promise((resolve, reject) => {
                     products.forEach((item, i) => {
                         getProduct(item.id, (err, result) => {
@@ -216,15 +216,14 @@ module.exports = {
                                     } else {
                                         let data = {};
                                         data['qty'] = item.qty
-                                        data['sold_date'] = item.sold_date ? new Date(item.sold_date) : sold_date ? new Date(sold_date) : new Date().toISOString().split("T")[0]
+                                        data['sold_date'] = item.sold_date ? new Date(item.sold_date) : sold_date ? sold_date : new Date().toISOString().split("T")[0]
                                         data['product_name'] = product.product_name
-                                        data['sale_price'] = item.sale_price
+                                        data['sale_price'] = item.sale_price / item.qty
                                         data['sold_product_id'] = product.id
                                         data['actual_price'] = item.actual_price ? item.actual_price : product.actual_price
                                         sell(item.id, data, (error, response) => {
                                             if (error) console.log("errr", error);
                                             if (response) {
-                                                total_sold_qty += item.qty
                                                 if (product.id === result[0].id) {
                                                     product.qty - item.qty
                                                 }
@@ -235,6 +234,7 @@ module.exports = {
                                                     product['status'] = 0
                                                     product['is_sold'] = 1
                                                 }
+                                                total_sold_qty += item.qty
                                                 reduce(item.id, item.qty, (err, cb) => {
                                                     if (err) console.log(err);
                                                 })
@@ -253,7 +253,11 @@ module.exports = {
                     })
                 }).then(
                     response => {
-                        res.status(200).json(response)
+                        let message = response.message
+                        res.status(200).json({
+                            message,
+                            total: total_sold_qty
+                        })
                     },
                     err => {
                         res.status(422).json({
