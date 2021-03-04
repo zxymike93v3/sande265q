@@ -2,14 +2,25 @@ const pool = require("../../database/database")
 
 module.exports = {
     Sales: (data, callback) => {
-        pool.query(
-            `SELECT * FROM sales WHERE sold_date >= ? AND sold_date <= ?`,
-            [data.start_date, data.end_date],
-            (error, result) => {
-                if (error) return callback(error)
-                return (callback(null, result))
-            }
-        )
+        if (data.start_date && !data.end_date) {
+            pool.query(
+                `SELECT * FROM sales WHERE sold_date >= ?`,
+                [data.start_date],
+                (error, result) => {
+                    if (error) return callback(error)
+                    return (callback(null, result))
+                }
+            )
+        } else {
+            pool.query(
+                `SELECT * FROM sales WHERE (sold_date >= ? AND sold_date <= ?)`,
+                [data.start_date, data.end_date],
+                (error, result) => {
+                    if (error) return callback(error)
+                    return (callback(null, result))
+                }
+            )
+        }
     },
     dailySales: (dt, callback) => {
         pool.query(
