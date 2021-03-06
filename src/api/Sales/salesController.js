@@ -1,21 +1,21 @@
-const { validationResult } = require("express-validator");
+const {validationResult} = require("express-validator");
 const isEmpty = require("is-empty");
 const Joi = require("joi");
 const pool = require("../../database/database");
-const { localValidation } = require("../../helpers/ValidationHelper");
-const { paginate } = require("../../middlewares/Paginate");
-const { getProduct, updateProduct, reduce } = require("../product_info/productModel");
-const { Sales, dailySales, sell } = require("./salesModel");
+const {localValidation} = require("../../helpers/ValidationHelper");
+const {paginate} = require("../../middlewares/Paginate");
+const {getProduct, updateProduct, reduce} = require("../product_info/productModel");
+const {Sales, dailySales, sell} = require("./salesModel");
 
 const nFormatter = (num, digits) => {
     const lookup = [
-        { value: 1, symbol: "" },
-        { value: 1e3, symbol: "k" },
-        { value: 1e6, symbol: "M" },
-        { value: 1e9, symbol: "G" },
-        { value: 1e12, symbol: "T" },
-        { value: 1e15, symbol: "P" },
-        { value: 1e18, symbol: "E" }
+        {value: 1, symbol: ""},
+        {value: 1e3, symbol: "k"},
+        {value: 1e6, symbol: "M"},
+        {value: 1e9, symbol: "G"},
+        {value: 1e12, symbol: "T"},
+        {value: 1e15, symbol: "P"},
+        {value: 1e18, symbol: "E"}
     ];
     const rx = /\.0+$|(\.[0-9]*[1-9])0+$/;
     var item = lookup.slice().reverse().find(function (item) {
@@ -26,13 +26,13 @@ const nFormatter = (num, digits) => {
 
 module.exports = {
     getSales: (req, res) => {
-        let { start_date, end_date } = req.query;
-        Sales({ start_date, end_date }, (err, result) => {
+        let {start_date, end_date} = req.query;
+        Sales({start_date, end_date}, (err, result) => {
             if (err) return res.status(400).json({
                 message: `${err.sqlMessage ? err.sqlMessage : 'Something Went Wrong'}`
             })
             else {
-                const { pages, limits, start, to, filterData, total, last_page } = paginate(result, req)
+                const {pages, limits, start, to, filterData, total, last_page} = paginate(result, req)
                 if (result[0]) {
                     res.status(200).json({
                         message: `Successfully Retrived Sales Report from ${start_date} to ${end_date}`,
@@ -51,15 +51,15 @@ module.exports = {
         })
     },
     getDailySales: (req, res) => {
-        let yourDate = new Date()
-        const offset = yourDate.getTimezoneOffset()
-        localDate = new Date(yourDate.getTime() - (offset * 60 * 1000))
-        let date = req.query.date ? req.query.date : localDate.toISOString().split('T')[0]
+        let vdate = new Date()
+        // const offset = yourDate.getTimezoneOffset()
+        // localDate = new Date(yourDate.getTime() - (offset * 60 * 1000))
+        let date = req.query.date ? req.query.date : vdate.toISOString().split('T')[0]
         var dt = new Date(date).toISOString().slice(0, 19).replace("T", " ");
         let prev_mth = new Date(new Date().getTime() - (30 * 24 * 60 * 60 * 1000)).toISOString().split("T")[0]
         let today = new Date().toISOString().split("T")[0];
         let monthly_total = 0;
-        Sales({ start_date: prev_mth, end_date: today }, (err, result) => {
+        Sales({start_date: prev_mth, end_date: today}, (err, result) => {
             if (err) console.log("errir", err);
             if (result && result.length > 0) {
                 for (var i = 0; i < result.length; i++) {
@@ -70,7 +70,7 @@ module.exports = {
             }
         })
         dailySales(dt.length > 10 ? dt.split(" ")[0] : dt, (err, result) => {
-            if (err) res.status(400).json({ err })
+            if (err) res.status(400).json({err})
             else if (result) {
                 let total = 0;
                 let qty = 0;
@@ -111,7 +111,7 @@ module.exports = {
         let data = {};
         let body = req.body;
         getProduct(id, (err, result) => {
-            if (err) res.status(400).json({ err })
+            if (err) res.status(400).json({err})
             if (result) {
                 let product = result[0]
                 if (!product) {
@@ -122,13 +122,13 @@ module.exports = {
                     (product && product.qty >= 1) {
                     if (product.qty < body.qty) {
                         res.status(422).json({
-                            message: { qty: ["Not Enough Quantity, remaining qty = " + product.qty] }
+                            message: {qty: ["Not Enough Quantity, remaining qty = " + product.qty]}
                         })
                     } else {
                         data['qty'] = body.qty
                         data['sold_date'] = body.sold_date ? body.sold_date : new Date().toISOString().split("T")[0]
                         data['product_name'] = product.product_name
-                        data['sale_price'] = body.sale_price
+                        data['sale_price'] = body.sale_price / body.qty
                         data['sold_product_id'] = product.id
                         data['actual_price'] = body.actual_price ? body.actual_price : product.actual_price
                         let validationRule = {
@@ -139,11 +139,11 @@ module.exports = {
                         const validation = localValidation(data, validationRule, errors, false)
                         if (validation.localvalidationerror) {
                             return res.status(422).json({
-                                message: { ...validation.error },
+                                message: {...validation.error},
                             })
                         } else {
                             sell(id, data, (error, response) => {
-                                if (error) res.status(400).json({ error })
+                                if (error) res.status(400).json({error})
                                 if (response) {
                                     product['qty'] = product.qty - body.qty
                                     product['category'] = "";
@@ -153,7 +153,7 @@ module.exports = {
                                         product['is_sold'] = 1
                                     }
                                     updateProduct(id, product, (err, callback) => {
-                                        if (err) res.status(400).json({ err, message: 'Something Went Wrong' })
+                                        if (err) res.status(400).json({err, message: 'Something Went Wrong'})
                                         if (callback) {
                                             res.status(200).json({
                                                 message: 'Product Successfully Sold',
@@ -168,7 +168,7 @@ module.exports = {
                     }
                 } else {
                     res.status(422).json({
-                        message: { qty: ['No Product Quantity Left to Sell.'] }
+                        message: {qty: ['No Product Quantity Left to Sell.']}
                     })
                 }
             }
@@ -183,10 +183,10 @@ module.exports = {
         const validation = localValidation(body, validationRule, errors, false)
         if (validation.localvalidationerror) {
             return res.status(422).json({
-                message: { ...validation.error },
+                message: {...validation.error},
             })
         } else {
-            let { products, sold_date } = body;
+            let {products, sold_date} = body;
             let error = validationResult(req);
             if (!error.isEmpty()) {
                 return res.status(422).json(
@@ -203,15 +203,15 @@ module.exports = {
                 new Promise((resolve, reject) => {
                     products.forEach((item, i) => {
                         getProduct(item.id, (err, result) => {
-                            if (err) reject({ code: 500, message: err })
+                            if (err) reject({code: 500, message: err})
                             else if (result) {
                                 let product = result[0]
                                 if (!product) {
-                                    fails.push({ ['products.' + i + '.id']: ['No Product Found with the given ID'] })
+                                    fails.push({['products.' + i + '.id']: ['No Product Found with the given ID']})
                                     if (i === products.length - 1) reject(fails)
                                 } else if (product && product.qty >= 1) {
                                     if (product.qty < item.qty) {
-                                        fails.push({ ['products.' + i + '.qty']: ["Not Enough Quantity, remaining qty = " + product.qty] })
+                                        fails.push({['products.' + i + '.qty']: ["Not Enough Quantity, remaining qty = " + product.qty]})
                                         if (i === products.length - 1) reject(fails)
                                     } else {
                                         let data = {};
@@ -239,13 +239,13 @@ module.exports = {
                                                     if (err) console.log(err);
                                                 })
                                                 if (i === products.length - 1) {
-                                                    resolve({ message: "All Products Sold Successfully" })
+                                                    resolve({message: "All Products Sold Successfully"})
                                                 }
                                             }
                                         })
                                     }
                                 } else {
-                                    fails.push({ ['products.' + i + '.qty']: ['No Product Quantity Left to Sell.'] })
+                                    fails.push({['products.' + i + '.qty']: ['No Product Quantity Left to Sell.']})
                                     if (i === products.length - 1) reject(fails)
                                 }
                             }
