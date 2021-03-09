@@ -2,7 +2,7 @@ const express = require('express');
 require('dotenv').config();
 const app = express();
 const bodyParser = require('body-parser');
-const { authRoutes, customerRoute, userRoutes, productRoute, vendorRoute, salesRoute, categoryRoute, debtorsRoute } = require('./src/api');
+const {authRoutes, customerRoute, userRoutes, productRoute, vendorRoute, salesRoute, categoryRoute, debtorsRoute} = require('./src/api');
 const imageRoute = require('./src/api/imageUpload')
 const cors = require('cors')
 
@@ -19,7 +19,7 @@ app.use(cors())
 //defualt url callback
 app.get("/", (req, res) => {
     res.status(200).send({
-        message: "Node.js application server"
+        message: "Default Backend"
     })
 })
 
