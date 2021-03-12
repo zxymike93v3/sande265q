@@ -18,26 +18,7 @@ app.use(cors())
 
 //defualt url callback
 app.get("/", (req, res) => {
-    res.send(`
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
-            integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" 
-        crossorigin="anonymous">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    </head>
-    <body>
-        <div class="d-flex justify-content-center align-items-center">
-            <div class="card mt-5">
-                <div class="card-body">
-                    <h3 class="card-title">Welcome, Sorry the page you are looking for cannot be found<h3>
-                </div>
-            </div>
-        </div>            
-    </body>
-    </html>
-    `)
+    res.sendFile('404.html', {root: __dirname})
 })
 
 //middleware
